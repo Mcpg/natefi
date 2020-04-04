@@ -67,11 +67,11 @@ namespace EFI
     static_assert(sizeof(UINTN) == 4, "UINTN is not 32-bit");
     static_assert(sizeof(INT8) == 1, "INT8 is not 8-bit");
     static_assert(sizeof(INT16) == 2, "INT16 is not 16-bit");
-    static_assert(sizeof(INT32) == 3, "INT32 is not 32-bit");
+    static_assert(sizeof(INT32) == 4, "INT32 is not 32-bit");
     static_assert(sizeof(INT64) == 4, "INT64 is not 64-bit");
     static_assert(sizeof(UINT8) == 1, "UINT8 is not 8-bit");
     static_assert(sizeof(UINT16) == 2, "UINT16 is not 16-bit");
-    static_assert(sizeof(UINT32) == 3, "UINT32 is not 32-bit");
+    static_assert(sizeof(UINT32) == 4, "UINT32 is not 32-bit");
     static_assert(sizeof(UINT64) == 4, "UINT64 is not 64-bit");
     static_assert(sizeof(CHAR8) == 1, "CHAR8 is not 8-bit");
     static_assert(sizeof(CHAR16) == 2, "CHAR16 is not 16-bit");
@@ -80,8 +80,8 @@ namespace EFI
     static_assert(sizeof(EFI_MAC_ADDRESS) == 32, "EFI_MAC_ADDRESS is not 256-bit");
     static_assert(sizeof(EFI_IPv6_ADDRESS) == 16, "EFI_IPv6_ADDRESS is not 128-bit");
     
-    static constexpr _ToEfiErrorCode(UINTN code) { return 0x80000000 | code; }
-    static constexpr _ToEfiWarnCode(UINTN code) { return code; }
+    static constexpr unsigned _ToEfiErrorCode(UINTN code) { return 0x80000000 | code; }
+    static constexpr unsigned _ToEfiWarnCode(UINTN code) { return code; }
     enum EFI_STATUS : UINTN
     {
         EFI_SUCCESS = 0,
@@ -128,4 +128,64 @@ namespace EFI
         EFI_IP_ADDRESS_CONFLICT = _ToEfiErrorCode(34),
         EFI_HTTP_ERROR = _ToEfiErrorCode(35),
     };
+
+    struct EFI_TABLE_HEADER
+    {
+        UINT64 Signature;
+        UINT32 Revision;
+        UINT32 HeaderSize;
+        UINT32 CRC32;
+        UINT32 Reserved;
+    };
+
+    struct EFI_SYSTEM_TABLE;
+    struct EFI_SIMPLE_TEXT_INPUT_PROTOCOL;
+    struct EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL;
+    struct EFI_RUNTIME_SERVICES;
+    struct EFI_BOOT_SERVICES;
+    struct EFI_CONFIGURATION_TABLE;
+
+    static constexpr UINT64 EFI_SYSTEM_TABLE_SIGNATURE = 0x5453595320494249;
+    static constexpr UINT32 CreateSystemTableRevision(
+        unsigned major, unsigned minor, unsigned patch
+    )
+    {
+        //static_assert(minor < 10, "Minor version is >= 10");
+        //static_assert(patch < 10, "Patch version is >= 10");
+        return (major << 16) | ((minor * 10) + patch);
+    }
+
+    static constexpr UINT32 EFI_SPECIFICATION_VERSION
+        = CreateSystemTableRevision(2, 8, 0);
+    static constexpr UINT32 EFI_SYSTEM_TABLE_REVISION = EFI_SPECIFICATION_VERSION;
+
+    struct EFI_SYSTEM_TABLE
+    {
+        EFI_TABLE_HEADER Hdr;
+        CHAR16* FirmwareVendor;
+        UINT32 FirmwareRevision;
+        EFI_HANDLE ConsoleInHandle;
+        EFI_SIMPLE_TEXT_INPUT_PROTOCOL* ConIn;
+        EFI_HANDLE ConsoleOutHandle;
+        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* ConOut;
+        EFI_HANDLE StandardErrorHandle;
+        EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* Stder;
+        EFI_RUNTIME_SERVICES* RuntimeServices;
+        EFI_BOOT_SERVICES* BootServices;
+        UINTN NumberOfTableEntries;
+        EFI_CONFIGURATION_TABLE* ConfigurationTable;
+
+        bool IsValid() {
+            return TableHeader.Signature == EFI_SYSTEM_TABLE_REVISION &&
+                TableHeader.Revision == EFI_SYSTEM_TABLE_REVISION;
+        }
+    };
+
+    extern "C"
+    {
+        typedef EFI_STATUS (EFIAPI *EFI_IMAGE_ENTRY_POINT)(
+            IN EFI_HANDLE ImageHandle,
+            IN EFI_SYSTEM_TABLE* SystemTable 
+        );
+    }
 }
