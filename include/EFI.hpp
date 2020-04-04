@@ -157,7 +157,8 @@ namespace EFI
 
     static constexpr UINT32 EFI_SPECIFICATION_VERSION
         = CreateSystemTableRevision(2, 8, 0);
-    static constexpr UINT32 EFI_SYSTEM_TABLE_REVISION = EFI_SPECIFICATION_VERSION;
+    static constexpr UINT32 EFI_SYSTEM_TABLE_REVISION
+        = EFI_SPECIFICATION_VERSION;
 
     struct EFI_SYSTEM_TABLE
     {
@@ -183,7 +184,7 @@ namespace EFI
 
     struct EFI_BOOT_SERVICES
     {
-        
+
     };
 
     // Event types
@@ -206,7 +207,13 @@ namespace EFI
             IN EFI_HANDLE ImageHandle,
             IN EFI_SYSTEM_TABLE* SystemTable);
 
+        // UEFI function prototypes.
+        // They're just nice typedefs, see official specs for what every field
+        // does.
+
         // Boot services
+
+        // Event, timer, and task priority services
         EFI_FUNC_TYPEDEF(
             EFI_CREATE_EVENT,
             IN UINT32 Type,
@@ -214,12 +221,6 @@ namespace EFI
             IN EFI_EVENT_NOTIFY NotifyFunction OPTIONAL,
             IN VOID* NotifyContext OPTIONAL,
             OUT EFI_EVENT* Event
-            );
-
-        EFI_FUNC_TYPEDEF(
-            EFI_EVENT_NOTIFY,
-            IN EFI_EVENT Event,
-            IN VOID* Context
             );
 
         EFI_FUNC_TYPEDEF(
@@ -232,7 +233,251 @@ namespace EFI
             OUT EFI_EVENT* Event
             );
 
+        EFI_FUNC_TYPEDEF(
+            EFI_CLOSE_EVENT,
+            IN EFI_EVENT Event);
 
+        EFI_FUNC_TYPEDEF(
+            EFI_SIGNAL_EVENT,
+            IN EFI_EVENT Event);
 
+        EFI_FUNC_TYPEDEF(
+            EFI_WAIT_FOR_EVENT,
+            IN UINTN NumberOfEvents,
+            IN EFI_EVENT* Event,
+            OUT UINTN* Index);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_CHECK_EVENT,
+            IN EFI_EVENT Event);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_SET_TIMER,
+            IN EFI_EVENT Event,
+            IN EFI_TIMER_DELAY Type,
+            IN UINT64 TriggerTime);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_RAISE_TPL,
+            IN EFI_TPL NewTpl);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_RESTORE_TPL,
+            IN EFI_TPL OldTpl);
+
+        // Memory allocation services
+        EFI_FUNC_TYPEDEF(
+            EFI_ALLOCATE_PAGES,
+            IN EFI_ALLOCATE_TYPE Type,
+            IN EFI_MEMORY_TYPE MemoryType,
+            IN UINTN Pages,
+            IN OUT EFI_PHYSICAL_ADDRESS* Memory);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_FREE_PAGES,
+            IN EFI_PHYSICAL_ADDRESS Memory,
+            IN UINTN Pages);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_GET_MEMORY_MAP,
+            IN OUT UINTN* MemoryMapSize,
+            IN OUT EFI_MEMORY_DESCRIPTOR* MemoryMap,
+            OUT UINTN* MapKey,
+            OUT UINTN* DescriptorSize,
+            OUT UINT32* DescriptorVersion);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_ALLOCATE_POOL,
+            IN EFI_MEMORY_TYPE PoolType,
+            IN UINTN Size,
+            OUT VOID** Buffer);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_FREE_POOL,
+            IN VOID* Buffer);
+
+        // Protocol handler services
+        EFI_FUNC_TYPEDEF(
+            EFI_INSTALL_PROTOCOL_INTERFACE,
+            IN OUT EFI_HANDLE* Handle,
+            IN EFI_GUID* Protocol,
+            IN EFI_INTERFACE_TYPE InterfaceType,
+            IN VOID* Interface);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_UNINSTALL_PROTOCOL_INTERFACE,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            IN VOID* Interface);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_REINSTALL_PROTOCOL_INTERFACE,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            IN VOID* OldInterface,
+            IN VOID* NewInterface);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_REGISTER_PROTOCOL_NOTIFY,
+            IN EFI_GUID* Protocol,
+            IN EFI_EVENT Event,
+            OUT VOID** Registration);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_LOCATE_HANDLE,
+            IN EFI_LOCATE_SEARCH_TYPE SearchType,
+            IN EFI_GUID* Protocol OPTIONAL,
+            IN VOID* SearchKey OPTIONAL,
+            IN OUT UINTN* BufferSize,
+            OUT EFI_HANDLE* Buffer);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_HANDLE_PROTOCOL,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            OUT VOID** Interface);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_LOCATE_DEVICE_PATH,
+            IN EFI_GUID* Protocol,
+            IN OUT EFI_DEVICE_PATH_PROTOCOL** DevicePath,
+            OUT EFI_HANDLE* Device);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_OPEN_PROTOCOL,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            OUT VOID** Interface OPTIONAL,
+            IN EFI_HANDLE AgentHandle,
+            IN EFI_HANDLE ControllerHandle,
+            IN UINT32 Attributes);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_CLOSE_PROTOCOL,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            IN EFI_HANDLE AgentHandle,
+            IN EFI_HANDLE ControllerHandle);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_OPEN_PROTOCOL_INFORMATION,
+            IN EFI_HANDLE Handle,
+            IN EFI_GUID* Protocol,
+            OUT EFI_OPEN_PROTOCOL_INFORMATION_ENTRY** EntryBuffer,
+            OUT UINTN* EntryCount);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_CONNECT_CONTROLLER,
+            IN EFI_HANDLE ControllerHandle,
+            IN EFI_HANDLE* DriverImageHandle OPTIONAL,
+            IN EFI_DEVICE_PATH_PROTOCOL* RemainingDevicePath OPTIONAL,
+            IN BOOLEAN Recursive);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_DISCONNECT_CONTROLLER,
+            IN EFI_HANDLE ControllerHandle,
+            IN EFI_HANDLE DriverImageHandle OPTIONAL,
+            IN EFI_HANDLE ChildHandle OPTIONAL);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_PROTOCOLS_PER_HANDLE,
+            IN EFI_HANDLE Handle,
+            OUT EFI_GUID*** ProtocolBuffer,
+            OUT UINTN* ProtocolBufferCount);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_LOCATE_HANDLE_BUFFER,
+            IN EFI_LOCATE_SEARCH_TYPE SearchType,
+            IN EFI_GUID* Protocol OPTIONAL,
+            IN VOID* SearchKey OPTIONAL,
+            IN OUT UINTN* NoHandles,
+            OUT EFI_HANDLE** Buffer);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_LOCATE_PROTOCOL,
+            IN EFI_GUID* Protocol,
+            IN VOID* Registration OPTIONAL,
+            OUT VOID** Interface);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES,
+            IN OUT EFI_HANDLE* Handle,
+            ...);
+
+       EFI_FUNC_TYPEDEF(
+            EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES,
+            IN OUT EFI_HANDLE* Handle,
+            ...);
+
+        // Image services
+        EFI_FUNC_TYPEDEF(
+            EFI_IMAGE_LOAD,
+            IN BOOLEAN BootPolicy,
+            IN EFI_HANDLE ParentImageHandle,
+            IN EFI_DEVICE_PATH_PROTOCOL* DevicePath
+            IN VOID* SourceBuffer OPTIONAL,
+            IN UINTN SourceSize,
+            OUT EFI_HANDLE* ImageHandle);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_IMAGE_START,
+            IN EFI_HANDLE ImageHandle,
+            OUT UINTN* ExitDataSize,
+            OUT CHAR16** ExitData OPTIONAL);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_IMAGE_UNLOAD,
+            IN EFI_HANDLE ImageHandle);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_EXIT,
+            IN EFI_HANDLE ImageHandle,
+            IN EFI_STATUS ExitStatus,
+            IN UINTN ExitDataSize,
+            IN CHAR16* ExitData OPTIONAL);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_EXIT_BOOT_SERVICES,
+            IN EFI_HANDLE ImageHandle,
+            IN UINTN MapKey);
+
+        // Miscellaneous boot services
+        EFI_FUNC_TYPEDEF(
+            EFI_SET_WATCHDOG_TIMER,
+            IN UINTN Timeout,
+            IN UINT64 WatchdogCode,
+            IN UINTN DataSize,
+            IN CHAR16* WatchdogData OPTIONAL);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_STALL,
+            IN UINTN Microseconds);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_COPY_MEM,
+            IN VOID* Destination,
+            IN VOID* Source,
+            IN UINTN Length);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_SET_MEM,
+            IN VOID* Buffer,
+            IN UINTN Size,
+            IN UINT8 Value);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_GET_NEXT_MONOTONIC_COUNT,
+            OUT UINT64* Count);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_INSTALL_CONFIGURATION_TABLE,
+            IN EFI_GUID* Guid,
+            IN VOID* Table);
+
+        EFI_FUNC_TYPEDEF(
+            EFI_CALCULATE_CRC32,
+            IN VOID* Data,
+            IN UINTN DataSize,
+            OUT UINT32* Crc32);
     }
 }
