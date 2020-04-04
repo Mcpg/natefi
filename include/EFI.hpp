@@ -181,11 +181,58 @@ namespace EFI
         }
     };
 
+    struct EFI_BOOT_SERVICES
+    {
+        
+    };
+
+    // Event types
+    static constexpr UINT32 EVT_TIMER = 0x80000000;
+    static constexpr UINT32 EVT_RUNTIME = 0x40000000;
+    static constexpr UINT32 EVT_NOTIFY_WAIT = 0x00000100;
+    static constexpr UINT32 EVT_NOTIFY_SIGNAL = 0x00000200;
+    static constexpr UINT32 EVT_SIGNAL_EXIT_BOOT_SERVICES = 0x00000201;
+    static constexpr UINT32 EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE = 0x00000202;
+
+#define EFI_FUNC_TYPEDEF(name, ...)    \
+    typedef EFI_STATUS (EFIAPI *name)( \
+        __VA_ARGS__                    \    
+    );
+
     extern "C"
     {
-        typedef EFI_STATUS (EFIAPI *EFI_IMAGE_ENTRY_POINT)(
+        EFI_FUNC_TYPEDEF(
+            EFI_IMAGE_ENTRY_POINT,
             IN EFI_HANDLE ImageHandle,
-            IN EFI_SYSTEM_TABLE* SystemTable 
-        );
+            IN EFI_SYSTEM_TABLE* SystemTable);
+
+        // Boot services
+        EFI_FUNC_TYPEDEF(
+            EFI_CREATE_EVENT,
+            IN UINT32 Type,
+            IN EFI_TP NotifyTpl,
+            IN EFI_EVENT_NOTIFY NotifyFunction OPTIONAL,
+            IN VOID* NotifyContext OPTIONAL,
+            OUT EFI_EVENT* Event
+            );
+
+        EFI_FUNC_TYPEDEF(
+            EFI_EVENT_NOTIFY,
+            IN EFI_EVENT Event,
+            IN VOID* Context
+            );
+
+        EFI_FUNC_TYPEDEF(
+            EFI_CREATE_EVENT_EX,
+            IN UINT32 Type,
+            IN EFI_TPL NotifyTpl,
+            IN EFI_EVENT_NOTIFY NotifyFunction OPTIONAL,
+            IN CONST VOID* NotifyContext OPTIONAL,
+            IN CONST EFI_GUID* EventGroup OPTIONAL,
+            OUT EFI_EVENT* Event
+            );
+
+
+
     }
 }
