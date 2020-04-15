@@ -1,10 +1,16 @@
 #pragma once
 
-// IA-32 UEFI definitions
+// IA-32 and AMD64 UEFI definitions
 // Based on UEFI 2.8 Specification, no guarantee on 100% compliance, though
 // https://uefi.org/sites/default/files/resources/UEFI_Spec_2_8_final.pdf
 // header by nat <3
 
+// Arch configuration - it can be either ia32 or amd64
+#ifndef NATEFI_ARCH
+#define NATEFI_ARCH amd64
+#endif
+
+// Some Microsoftish macros required by the standard
 #define IN
 #define OUT
 #define OPTIONAL
@@ -17,9 +23,6 @@ namespace EFI
     const BOOLEAN FALSE = BOOLEAN(0);
     const BOOLEAN TRUE = BOOLEAN(1);
     
-    typedef signed int INTN;
-    typedef unsigned int UINTN;
-    
     typedef signed char INT8;
     typedef signed short INT16;
     typedef signed int INT32;
@@ -29,7 +32,17 @@ namespace EFI
     typedef unsigned short UINT16;
     typedef unsigned int UINT32;
     typedef unsigned long UINT64;
-    
+
+    #if NATEFI_ARCH == ia32
+        typedef INT32 INTN;
+        typedef UINT32 UINTN;
+    #elif NATEFI_ARCH == amd64
+        typedef INT64 INTN;
+        typedef UINT64 UINTN;
+    #else
+        #error Unsupported architecture for NatEFI!
+    #endif
+
     //typedef INT64 INT128[2];
     //typedef UINT64 UINT128[2];
     
@@ -63,8 +76,14 @@ namespace EFI
         UINT8 Data[16]{0};
     };
     
-    static_assert(sizeof(INTN) == 4, "INTN is not 32-bit");
-    static_assert(sizeof(UINTN) == 4, "UINTN is not 32-bit");
+    #if NATEFI_ARCH == ia32
+        static_assert(sizeof(INTN) == 4, "INTN is not 32-bit");
+        static_assert(sizeof(UINTN) == 4, "UINTN is not 32-bit");
+    #elif NATEFI_ARCH == amd64
+        static_assert(sizeof(INTN) == 8, "INTN is not 64-bit");
+        static_assert(sizeof(UINTN) == 8, "UINTN is not 64-bit");
+    #endif
+
     static_assert(sizeof(INT8) == 1, "INT8 is not 8-bit");
     static_assert(sizeof(INT16) == 2, "INT16 is not 16-bit");
     static_assert(sizeof(INT32) == 4, "INT32 is not 32-bit");
@@ -182,11 +201,6 @@ namespace EFI
         }
     };
 
-    struct EFI_BOOT_SERVICES
-    {
-
-    };
-
     // Event types
     static constexpr UINT32 EVT_TIMER = 0x80000000;
     static constexpr UINT32 EVT_RUNTIME = 0x40000000;
@@ -195,11 +209,14 @@ namespace EFI
     static constexpr UINT32 EVT_SIGNAL_EXIT_BOOT_SERVICES = 0x00000201;
     static constexpr UINT32 EVT_SIGNAL_VIRTUAL_ADDRESS_CHANGE = 0x00000202;
 
-#define EFI_FUNC_TYPEDEF(name, ...)    \
-    typedef EFI_STATUS (EFIAPI *name)( \
-        __VA_ARGS__                    \    
-    );
+    #define EFI_FUNC_TYPEDEF(name, ...)    \
+        typedef EFI_STATUS (EFIAPI *name)( \
+            __VA_ARGS__                    \    
+        );
+    
 
+    // ALL the service function typedefs supported by NatEFI
+    // There's a lot of them
     extern "C"
     {
         EFI_FUNC_TYPEDEF(
@@ -480,4 +497,97 @@ namespace EFI
             IN UINTN DataSize,
             OUT UINT32* Crc32);
     }
+
+    struct EFI_BOOT_SERVICES
+    {
+        EFI_TABLE_HEADER Hdr;
+
+        //
+        // Task priority services
+        //
+        EFI_RAISE_TPL RaiseTPL;
+        EFI_RESTORE_TPL RestoreTPL;
+
+        //
+        // Memory services
+        //
+        EFI_ALLOCATE_PAGES AllocatePages;
+        EFI_FREE_PAGES FreePages;
+        EFI_GET_MEMORY_MAP GetMemoryMap;
+        EFI_ALLOCATE_POOL AllocatePool;
+        EFI_FREE_POOL FreePool;
+
+        //
+        // Event and timer services
+        //
+        EFI_CREATE_EVENT CreateEvent;
+        EFI_SET_TIMER SetTimer;
+        EFI_WAIT_FOR_EVENT WaitForEvent;
+        EFI_SIGNAL_EVENT SignalEvent;
+        EFI_CLOSE_EVENT CloseEvent;
+        EFI_CHECK_EVENT CheckEvent;
+
+        //
+        // Protocol handler services
+        //
+        EFI_INSTALL_PROTOCOL_INTERFACE InstallProtocolInterface;
+        EFI_REINSTALL_PROTOCOL_INTERFACE ReinstallProtocolInterface;
+        EFI_UNINSTALL_PROTOCOL_INTERFACE UninstallProtocolInterface;
+        EFI_HANDLE_PROTOCOL HandleProtocol;
+        VOID* VeryUsefulAlthoughReservedField;
+        EFI_REGISTER_PROTOCOL_NOTIFY RegisterProtocolNotify;
+        EFI_LOCATE_HANDLE LocateHandle;
+        EFI_LOCATE_DEVICE_PATH LocateDevicePath;
+        EFI_INSTALL_CONFIGURATION_TABLE InstallConfigurationTable;
+
+        //
+        // Image services
+        //
+        EFI_IMAGE_LOAD LoadImage;
+        EFI_IMAGE_START StartImage;
+        EFI_EXIT Exit;
+        EFI_IMAGE_UNLOAD UnloadImage;
+        EFI_EXIT_BOOT_SERVICES ExitBootServices;
+
+        //
+        // Miscellaneous services
+        //
+        EFI_GET_NEXT_MONOTONIC_COUNT GetNextMonotonicCount;
+        EFI_STALL Stall;
+        EFI_SET_WATCHDOG_TIMER SetWatchdogTimer;
+
+        //
+        // DriverSupport services
+        //
+        EFI_CONNECT_CONTROLLER ConnectController;
+        EFI_DISCONNECT_CONTROLLER DisconnectController;
+
+        //
+        // Open and close protocol services
+        //
+        EFI_OPEN_PROTOCOL OpenProtocol;
+        EFI_CLOSE_PROTOCOL CloseProtocol;
+        EFI_OPEN_PROTOCOL_INFORMATION OpenProtocolInformation;
+
+        //
+        // LibraryServices
+        //
+        EFI_PROTOCOLS_PER_HANDLE ProtocolsPerHandle;
+        EFI_LOCATE_HANDLE_BUFFER LocateHandleBuffer;
+        EFI_LOCATE_PROTOCOL LocateProtocol;
+        EFI_INSTALL_MULTIPLE_PROTOCOL_INTERFACES InstallMultipleProtocolInterfaces;
+        EFI_UNINSTALL_MULTIPLE_PROTOCOL_INTERFACES UninstallMultipleProtocolInterfaces;
+
+        //
+        // 32-bit CRC services
+        //
+        EFI_CALCULATE_CRC32 CalculateCrc32;
+
+        //
+        // Miscellaneous services
+        //
+        EFI_COPY_MEM CopyMem;
+        EFI_SET_MEM SetMem;
+        EFI_CREATE_EVENT_EX CreateEventEx;
+    };
 }
